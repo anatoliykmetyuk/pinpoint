@@ -15,6 +15,11 @@ object pinpoint extends ScalaModule with PublishModule {
     )
   )
 
+  def ivyDeps = Agg(
+    ivy"com.lihaoyi::upickle:1.3.0",
+    ivy"com.lihaoyi::os-lib:0.7.3",
+  )
+
   override def docJar = T {
     val outDir = T.ctx().dest
     val javadocDir = outDir / 'javadoc
