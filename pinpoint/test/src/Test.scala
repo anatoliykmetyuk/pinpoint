@@ -4,28 +4,27 @@ import utest._
 
 object PinpointTest extends TestSuite:
   val tests = Tests {
-    test("Tracing and inspecting") {
-      def dummySettings() = Settings(
-        inspectAtHash = Some("3858f") // Hash of trace("bar")
+    test("Multilivel logging") {
+      val s = Settings(
+        markers = List("2eff675c", "5b032a94"),
+        hashSize = 8,
       )
 
-      trace("foo", dummySettings())
-      inspect("AAA", dummySettings())
-      trace("bar", dummySettings())
-      inspect("BBB", dummySettings())
-      trace("jar", dummySettings())
+      for i <- 1 to 10 do
+        log(s"Got $i", 0, s)
+        val squared = i * i
+        log(s"Squared: $squared", 1, s)
+        for x <- 1 to squared do
+          val cubed = x * x * x
+          log(s"Cubed: $cubed", 1, s)
+          log(s"I am 1000! $cubed", 2, s)
     }
 
     test("Reading config from file") {
       assert(
         readSettingsFromProjectFile("pinpoint/test/resources/hash.json") == Settings(
-          inspectAtHash = Some("3d29a")
-        )
-      )
-
-      assert(
-        readSettingsFromProjectFile("pinpoint/test/resources/empty.json") == Settings(
-          inspectAtHash = None
+          markers = List("133faaca", "55e2e195"),
+          hashSize = 8
         )
       )
     }

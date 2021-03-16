@@ -7,34 +7,39 @@ import scala.util.{ Try, Success, Failure }
 
 import ujson._
 
-case class Settings(inspectAtHash: Option[String])
+
+case class Settings(markers: List[String], hashSize: Int)
 def readSettingsFromProjectFile(filename: String = "pinpoint-cfg.json") =
   val jsonString = os.read(os.RelPath(filename).resolveFrom(os.pwd))
   val data = ujson.read(jsonString)
-  Try(data("inspect_at_hash")).map(_.str) match
-    case Success(value) =>
-      Settings(
-        inspectAtHash = Some(value)
-      )
-    case Failure(_) =>
-      Settings(
-        inspectAtHash = None
-      )
+  Settings(
+    markers = data("markers").arr.map(_.str).toList,
+    hashSize = data("hash_size").num.toInt
+  )
 
+type Timeline = ListBuffer[String]
 
-private val log = ListBuffer.empty[String]
+private val timelines = ListBuffer.empty[ListBuffer[String]]
 
-private def currentHash: String =
+private def hash(timeline: ListBuffer[String]): String =
   val md = MessageDigest.getInstance("MD5")
-  md.update(log.mkString.getBytes)
+  md.update(timeline.mkString.getBytes)
   val digest: Array[Byte] = md.digest()
   DatatypeConverter.printHexBinary(digest).toLowerCase
 
-def trace(msg: String, settings: => Settings = readSettingsFromProjectFile()): Unit =
-  log.append(msg)
-  if settings.inspectAtHash.isEmpty then
-    println(s"""\u001b[43;1m\u001b[30m${currentHash.take(8)}\u001b[0m $msg""")
+def log(msg: String, level: Int = 0, readSettings: => Settings = readSettingsFromProjectFile()): Unit =
+  val settings = readSettings
 
-def inspect(msg: String, settings: => Settings = readSettingsFromProjectFile()): Unit =
-  for hash <- settings.inspectAtHash if currentHash.startsWith(hash) do
-    println(s"""\u001b[43;1m\u001b[30mDEBUG:\u001b[0m $msg""")
+  while timelines.length < settings.markers.length + 1
+  do timelines.append(ListBuffer.empty[String])
+
+  val allowedLogAtLevel: Boolean =
+    settings.markers.take(level).zip(timelines.take(level))  // All the prior timelines and their marked hashes
+      .forall { case (h, tmln) => hash(tmln).startsWith(h) }          // All the prior timelines are at mark
+
+  if level < timelines.length && allowedLogAtLevel then  // Ignore levels beyond the innermost timeline
+    timelines(level).append(msg)
+    if level == timelines.length - 1  // Print the innermost timeline only
+    then
+      val currentHash = hash(timelines(level)).take(settings.hashSize)
+      println(s"""\u001b[43;1m\u001b[30m${currentHash}\u001b[0m $msg""")
