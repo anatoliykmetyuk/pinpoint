@@ -1,4 +1,7 @@
 {
-  "markers": ["133faaca", "55e2e195"],
-  "hash_size": 8
+  "markers": [
+    1,
+    2,
+    [3, 4]
+  ]
 }
