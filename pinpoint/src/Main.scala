@@ -1,11 +1,12 @@
 package pinpoint
 
-import java.security.MessageDigest
-import javax.xml.bind.DatatypeConverter
+import java.io.File
 import scala.collection.mutable.ListBuffer
-import scala.util.{ Try, Success, Failure }
+import scala.collection.JavaConverters._
 
-import ujson._
+import org.apache.commons.io.FileUtils
+import org.json.{ JSONObject, JSONArray }
+
 
 sealed trait Marker
 case class Single(hash: Int) extends Marker
@@ -13,13 +14,13 @@ case class Range(start: Int, end: Int) extends Marker
 
 case class Settings(markers: List[Marker])
 def readSettingsFromProjectFile(filename: String = "pinpoint-cfg.json") =
-  val jsonString = os.read(os.RelPath(filename).resolveFrom(os.pwd))
-  val data = ujson.read(jsonString)
+  val jsonString = FileUtils.readFileToString(File(filename), "utf8")
+  val data = JSONObject(jsonString)
   Settings(
-    markers = data("markers").arr.map {
-      case Num(id) => Single(id.toInt)
-      case Arr(ab) => ab.toList match
-        case Num(start) :: Num(end) :: Nil => Range(start.toInt, end.toInt)
+    markers = data.getJSONArray("markers").asScala.toList.map {
+      case id: Number => Single(id.intValue)
+      case ab: JSONArray => ab.asScala.toList match
+        case (start: Number) :: (end: Number) :: Nil => Range(start.intValue, end.intValue)
     }.toList
   )
 

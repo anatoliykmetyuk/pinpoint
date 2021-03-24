@@ -1,7 +1,7 @@
 import mill._, scalalib._, publish._
 
 object pinpoint extends ScalaModule with PublishModule {
-  def scalaVersion = "3.0.0-RC1"
+  def scalaVersion = "3.0.0-RC2-bin-20210318-e60ef35-NIGHTLY"
   def publishVersion = "0.1.0"
 
   def pomSettings = PomSettings(
@@ -16,8 +16,8 @@ object pinpoint extends ScalaModule with PublishModule {
   )
 
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::upickle:1.3.0",
-    ivy"com.lihaoyi::os-lib:0.7.3",
+    ivy"org.json:json:20210307",
+    ivy"commons-io:commons-io:2.8.0",
   )
 
   override def docJar = T {
@@ -28,7 +28,7 @@ object pinpoint extends ScalaModule with PublishModule {
   }
 
   object test extends ScalaModule with TestModule with Tests {
-    def testFrameworks = Seq("utest.runner.Framework")
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.7.7")
+    def testFrameworks = Seq("com.novocode.junit.JUnitFramework")
+    def ivyDeps = Agg(ivy"com.novocode:junit-interface:0.11")
   }
 }
