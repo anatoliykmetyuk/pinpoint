@@ -1,7 +1,7 @@
 import mill._, scalalib._, publish._
 
 object pinpoint extends ScalaModule with PublishModule {
-  def scalaVersion = "3.0.0-RC2-bin-20210318-e60ef35-NIGHTLY"
+  def scalaVersion = "2.13.5"
   def publishVersion = "0.1.0"
 
   def pomSettings = PomSettings(
